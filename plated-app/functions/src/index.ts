@@ -2,6 +2,10 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors = require('cors');
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -10,7 +14,11 @@ admin.initializeApp();
 const corsHandler = cors({ origin: true });
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(functions.config().gemini.api_key);
+const geminiApiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+if (!geminiApiKey) {
+  throw new Error('Gemini API key is required');
+}
+const genAI = new GoogleGenerativeAI(geminiApiKey);
 
 export interface AIRecipeResponse {
   title: string;

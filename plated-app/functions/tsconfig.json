@@ -12,12 +12,11 @@
   },
   "compileOnSave": true,
   "include": [
-    "src"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "../node_modules",
-    "../**/*.ts",
-    "lib"
+    "lib",
+    "../node_modules/@types/react-native/**/*"
   ]
 }
