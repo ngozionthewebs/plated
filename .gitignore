@@ -1,1 +1,13 @@
 node_modules
+# Environment files
+.env
+functions/.env
+*.env
+
+# Node modules
+node_modules/
+functions/node_modules/
+
+# Firebase
+firebase-debug.log
+firebase-export.json

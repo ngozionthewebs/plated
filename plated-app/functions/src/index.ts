@@ -3,31 +3,25 @@ import * as admin from 'firebase-admin';
 import OpenAI from 'openai'; // ✅ Add OpenAI
 import cors = require('cors');
 import * as dotenv from 'dotenv';
-
-// Load environment variables
 dotenv.config();
 
-// Initialize Firebase Admin
 admin.initializeApp();
-
-// Enable CORS
 const corsHandler = cors({ origin: true });
 
-// ✅ FIXED: Lazy initialization for deployment
 let openai: OpenAI;
-
 function getOpenAI(): OpenAI {
   if (!openai) {
-    // ✅ FIXED: Use environment variables only (no functions.config())
+    // ✅ FIREBASE v2: Use environment variables directly
     const openaiApiKey = process.env.OPENAI_API_KEY;
+    
     if (!openaiApiKey) {
-      throw new Error('OpenAI API key is required. Set OPENAI_API_KEY environment variable.');
+      throw new Error('OpenAI API key is required. Set via environment variables or .env file');
     }
+    
     openai = new OpenAI({ apiKey: openaiApiKey });
   }
   return openai;
 }
-
 // ✅ KEEP (commented out for now): Gemini initialization
 // const geminiApiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
 // if (!geminiApiKey) {
