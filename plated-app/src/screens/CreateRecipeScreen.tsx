@@ -5,7 +5,7 @@ import { GeneratedRecipe } from '../components/GeneratedRecipe';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import { generateRecipeFromVideo } from '../services/recipeService';
 import { Recipe } from '../types/recipe';
-import { createRecipe } from '../services/databaseService'; // ✅ Fixed import
+import { createRecipe } from '../services/databaseService';
 
 export const CreateRecipeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,11 +16,41 @@ export const CreateRecipeScreen: React.FC = () => {
     setGeneratedRecipe(null);
     
     try {
+      console.log('🎬 Starting recipe generation with URL:', videoUrl);
+      
       const recipe = await generateRecipeFromVideo(videoUrl);
+      
+      console.log('🏠 CreateRecipeScreen - Recipe received:', recipe);
+      console.log('📝 Recipe title:', recipe.title);
+      console.log('🥕 Ingredients count:', recipe.ingredients?.length);
+      console.log('👩‍🍳 Instructions count:', recipe.instructions?.length);
+      
+      // ✅ ENHANCED VALIDATION: Check if we have valid recipe data
+      if (!recipe.title || !Array.isArray(recipe.ingredients) || !Array.isArray(recipe.instructions)) {
+        console.error('❌ Invalid recipe data in CreateRecipeScreen:', recipe);
+        throw new Error('Received incomplete recipe data from AI');
+      }
+
+      // ✅ Check if arrays are empty
+      if (recipe.ingredients.length === 0 || recipe.instructions.length === 0) {
+        console.warn('⚠️ Recipe has empty arrays:', {
+          ingredientsEmpty: recipe.ingredients.length === 0,
+          instructionsEmpty: recipe.instructions.length === 0
+        });
+      }
+      
+      console.log('✅ Setting generated recipe in state');
       setGeneratedRecipe(recipe);
-    } catch (error) {
-      Alert.alert('Generation Failed', 'Failed to generate recipe. Please try again.');
-      console.error('Recipe generation error:', error);
+      
+    } catch (error: any) {
+      console.error('❌ Recipe generation error in CreateRecipeScreen:', error);
+      
+      // ✅ BETTER ERROR MESSAGES (integrated from my version)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to generate recipe. Please try again.';
+      
+      Alert.alert('Generation Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -28,19 +58,31 @@ export const CreateRecipeScreen: React.FC = () => {
 
   const handleSaveRecipe = async (recipe: Recipe) => {
     try {
-      // ✅ Use createRecipe instead of saveRecipeToFirestore
+      console.log('💾 Saving recipe to database:', recipe.title);
       await createRecipe(recipe);
       Alert.alert('Success', 'Recipe saved to your cookbook!');
       setGeneratedRecipe(null);
     } catch (error) {
+      console.error('❌ Save recipe error:', error);
       Alert.alert('Save Failed', 'Failed to save recipe. Please try again.');
     }
   };
 
+  // ✅ ADDED: Debugging for when generatedRecipe changes
+  React.useEffect(() => {
+    if (generatedRecipe) {
+      console.log('🔄 generatedRecipe state updated:', {
+        hasRecipe: !!generatedRecipe,
+        title: generatedRecipe.title,
+        ingredients: generatedRecipe.ingredients?.length,
+        instructions: generatedRecipe.instructions?.length
+      });
+    }
+  }, [generatedRecipe]);
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <View style={{ padding: 16 }}>
-        {/* ✅ Remove the extra 'c' character that was here */}
         <RecipeForm 
           onGenerateRecipe={handleGenerateRecipe}
           isLoading={isLoading}
@@ -50,7 +92,10 @@ export const CreateRecipeScreen: React.FC = () => {
           <GeneratedRecipe
             recipe={generatedRecipe}
             onSave={handleSaveRecipe}
-            onReset={() => setGeneratedRecipe(null)}
+            onReset={() => {
+              console.log('🔄 Resetting generated recipe');
+              setGeneratedRecipe(null);
+            }}
           />
         )}
       </View>

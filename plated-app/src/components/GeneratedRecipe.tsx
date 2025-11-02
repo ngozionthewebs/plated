@@ -9,15 +9,53 @@ interface GeneratedRecipeProps {
 }
 
 export const GeneratedRecipe: React.FC<GeneratedRecipeProps> = ({ recipe, onSave, onReset }) => {
+  // ✅ ADDED: Debugging when component receives props
+  console.log('📦 GeneratedRecipe received props:', {
+    hasRecipe: !!recipe,
+    title: recipe?.title || 'No title',
+    ingredientCount: recipe?.ingredients?.length || 0,
+    instructionCount: recipe?.instructions?.length || 0,
+    hasPrepTime: !!recipe?.prepTime,
+    hasCookTime: !!recipe?.cookTime,
+    hasServings: !!recipe?.servings,
+    hasDifficulty: !!recipe?.difficulty,
+    tagsCount: recipe?.tags?.length || 0
+  });
+
+  // ✅ ADDED: Debugging for empty arrays
+  if (recipe?.ingredients?.length === 0) {
+    console.warn('⚠️ GeneratedRecipe: ingredients array is empty');
+  }
+  if (recipe?.instructions?.length === 0) {
+    console.warn('⚠️ GeneratedRecipe: instructions array is empty');
+  }
+
   const handleSave = () => {
+    console.log('💾 Save button pressed for recipe:', recipe.title);
     Alert.alert(
       'Save Recipe',
       'Would you like to save this recipe to your cookbook?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Save', style: 'default', onPress: () => onSave(recipe) }
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('❌ Save cancelled by user')
+        },
+        { 
+          text: 'Save', 
+          style: 'default', 
+          onPress: () => {
+            console.log('✅ User confirmed save for recipe:', recipe.title);
+            onSave(recipe);
+          }
+        }
       ]
     );
+  };
+
+  const handleReset = () => {
+    console.log('🔄 Reset button pressed');
+    onReset();
   };
 
   const formatTime = (time: string | undefined) => {
@@ -25,13 +63,18 @@ export const GeneratedRecipe: React.FC<GeneratedRecipeProps> = ({ recipe, onSave
     return time.toLowerCase().includes('min') ? time : `${time} mins`;
   };
 
+  // ✅ ADDED: Safe rendering with fallbacks
+  const safeIngredients = recipe.ingredients || [];
+  const safeInstructions = recipe.instructions || [];
+  const safeTags = recipe.tags || [];
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>✨ AI-Generated Recipe</Text>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Recipe Title */}
-        <Text style={styles.title}>{recipe.title}</Text>
+        {/* Recipe Title with fallback */}
+        <Text style={styles.title}>{recipe.title || 'Untitled Recipe'}</Text>
         
         {/* Recipe Metadata */}
         <View style={styles.metadataContainer}>
@@ -61,36 +104,48 @@ export const GeneratedRecipe: React.FC<GeneratedRecipeProps> = ({ recipe, onSave
           )}
         </View>
 
-        {/* Ingredients Section */}
+        {/* Ingredients Section with safe rendering */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
-          {recipe.ingredients.map((ingredient, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>{ingredient}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Instructions Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Instructions</Text>
-          {recipe.instructions.map((instruction, index) => (
-            <View key={index} style={styles.instructionItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepText}>{index + 1}</Text>
+          <Text style={styles.sectionTitle}>
+            Ingredients {safeIngredients.length > 0 && `(${safeIngredients.length})`}
+          </Text>
+          {safeIngredients.length > 0 ? (
+            safeIngredients.map((ingredient, index) => (
+              <View key={index} style={styles.listItem}>
+                <Text style={styles.bullet}>•</Text>
+                <Text style={styles.listText}>{ingredient}</Text>
               </View>
-              <Text style={styles.instructionText}>{instruction}</Text>
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No ingredients generated</Text>
+          )}
         </View>
 
-        {/* Tags */}
-        {recipe.tags && recipe.tags.length > 0 && (
+        {/* Instructions Section with safe rendering */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Instructions {safeInstructions.length > 0 && `(${safeInstructions.length})`}
+          </Text>
+          {safeInstructions.length > 0 ? (
+            safeInstructions.map((instruction, index) => (
+              <View key={index} style={styles.instructionItem}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.instructionText}>{instruction}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No instructions generated</Text>
+          )}
+        </View>
+
+        {/* Tags with safe rendering */}
+        {safeTags.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tags</Text>
             <View style={styles.tagsContainer}>
-              {recipe.tags.map((tag, index) => (
+              {safeTags.map((tag, index) => (
                 <View key={index} style={styles.tag}>
                   <Text style={styles.tagText}>{tag}</Text>
                 </View>
@@ -111,7 +166,7 @@ export const GeneratedRecipe: React.FC<GeneratedRecipeProps> = ({ recipe, onSave
         
         <TouchableOpacity 
           style={[styles.button, styles.resetButton]} 
-          onPress={onReset}
+          onPress={handleReset}
         >
           <Text style={styles.resetButtonText}>🔄 Try Another</Text>
         </TouchableOpacity>
@@ -133,7 +188,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     // Android elevation
     elevation: 4,
-    maxHeight: 500, // Limit height with scroll
+     flex: 1,
   },
   header: {
     fontSize: 16,
@@ -272,5 +327,13 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // ✅ ADDED: Style for empty state text
+  emptyText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 8,
   },
 });

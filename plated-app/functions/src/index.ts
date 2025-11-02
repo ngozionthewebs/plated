@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai'; // ✅ Add OpenAI
 import cors = require('cors');
 import * as dotenv from 'dotenv';
 
@@ -13,12 +13,29 @@ admin.initializeApp();
 // Enable CORS
 const corsHandler = cors({ origin: true });
 
-// Initialize Gemini AI
-const geminiApiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
-if (!geminiApiKey) {
-  throw new Error('Gemini API key is required');
+// ✅ FIXED: Lazy initialization for deployment
+let openai: OpenAI;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    // ✅ FIXED: Use environment variables only (no functions.config())
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key is required. Set OPENAI_API_KEY environment variable.');
+    }
+    openai = new OpenAI({ apiKey: openaiApiKey });
+  }
+  return openai;
 }
-const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+// ✅ KEEP (commented out for now): Gemini initialization
+// const geminiApiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+// if (!geminiApiKey) {
+//   throw new Error('Gemini API key is required');
+// }
+// const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+// --------------------------------------------------------------------------
 
 export interface AIRecipeResponse {
   title: string;
@@ -34,6 +51,171 @@ export interface AIRecipeResponse {
 export interface GenerateRecipeRequest {
   videoUrl: string;
 }
+
+/**
+ * ✅ NEW: Extract video data from YouTube/TikTok URLs
+ */
+async function extractVideoData(videoUrl: string): Promise<{
+  title: string;
+  description: string;
+  thumbnail: string;
+  platform: 'youtube' | 'tiktok' | 'instagram';
+}> {
+  try {
+    // YouTube URL handling
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const videoId = videoUrl.includes('youtu.be') 
+        ? videoUrl.split('youtu.be/')[1]?.split('?')[0]
+        : new URL(videoUrl).searchParams.get('v');
+      
+      // For demo purposes - in production, use YouTube API
+      return {
+        title: 'Cooking Video',
+        description: 'A delicious recipe video',
+        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        platform: 'youtube'
+      };
+    }
+    
+    // TikTok URL handling  
+    else if (videoUrl.includes('tiktok.com')) {
+      return {
+        title: 'TikTok Cooking Video',
+        description: 'Popular recipe from TikTok',
+        thumbnail: '', // TikTok thumbnails require their API
+        platform: 'tiktok'
+      };
+    }
+    
+    // Instagram URL handling
+    else if (videoUrl.includes('instagram.com')) {
+      return {
+        title: 'Instagram Recipe Video', 
+        description: 'Recipe from Instagram',
+        thumbnail: '',
+        platform: 'instagram'
+      };
+    }
+    
+    else {
+      throw new Error('Unsupported video platform');
+    }
+  } catch (error) {
+    console.error('Error extracting video data:', error);
+    throw new Error('Could not process this video URL');
+  }
+}
+
+/**
+ * ✅ NEW: OpenAI GPT-4 Vision Recipe Generation
+ */
+async function generateRecipeWithOpenAI(videoUrl: string, videoData: any): Promise<AIRecipeResponse> {
+  try {
+    // Prepare messages for OpenAI
+    const messages: any[] = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `You are a creative chef and recipe developer. Based on this cooking video context, invent a delicious and practical recipe.
+
+    VIDEO CONTEXT:
+    - Platform: ${videoData.platform}
+    - This is a cooking video showing food preparation
+
+    IMPORTANT: You MUST create a complete recipe even if you have limited information. Be creative and practical.
+
+    Create a realistic recipe with:
+    1. An appealing, descriptive title
+    2. Common ingredients with realistic quantities
+    3. Clear, practical cooking instructions
+    4. Reasonable time estimates
+    5. Standard serving size
+    6. Appropriate difficulty level
+    7. Relevant cuisine/diet tags
+
+    CRITICAL: Return ONLY valid JSON, no apologies or explanations. If you can't see specific details, make reasonable assumptions about a delicious recipe.
+
+    Use this exact JSON format:
+    {
+      "title": "Delicious Creative Recipe",
+      "ingredients": ["2 cups all-purpose flour", "1 tsp salt", "3 large eggs", "1 cup milk"],
+      "instructions": ["Preheat oven to 375°F", "Mix dry ingredients in bowl", "Whisk wet ingredients separately", "Combine and bake for 25-30 minutes"],
+      "prepTime": "15 mins",
+      "cookTime": "30 mins", 
+      "servings": "4",
+      "difficulty": "Medium",
+      "tags": ["baking", "comfort food", "family dinner"]
+    }`
+          }
+        ]
+      }
+    ];
+
+    // Add thumbnail image if available (YouTube)
+    if (videoData.thumbnail) {
+      messages[0].content.push({
+        type: "image_url",
+        image_url: {
+          url: videoData.thumbnail,
+        },
+      });
+    }
+
+    // ✅ CHANGE THIS LINE - use getOpenAI() instead of openai
+    const completion = await getOpenAI().chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+      max_tokens: 1500,
+    });
+
+    const recipeText = completion.choices[0]?.message?.content;
+    
+    if (!recipeText) {
+      throw new Error('No response from AI');
+    }
+
+    // Clean and parse the response
+    const cleanText = recipeText.replace(/```json\n?|\n?```/g, '').trim();
+    const recipe = JSON.parse(cleanText);
+
+    // Validate required fields
+    if (!recipe.title || !Array.isArray(recipe.ingredients) || !Array.isArray(recipe.instructions)) {
+      throw new Error('Invalid recipe structure from AI');
+    }
+
+    return recipe;
+
+  } catch (error: any) {
+    console.error('OpenAI recipe generation error:', error);
+    throw new Error(`AI recipe generation failed: ${error.message}`);
+  }
+}
+
+/**
+ * ✅ UPDATED: Recipe generation function (now uses OpenAI)
+ */
+async function generateRecipeFromVideoUrl(videoUrl: string): Promise<AIRecipeResponse> {
+  try {
+    console.log('Starting OpenAI recipe generation for:', videoUrl);
+    
+    // Extract video data first
+    const videoData = await extractVideoData(videoUrl);
+    console.log('Video data extracted:', videoData.platform);
+    
+    // Generate recipe using OpenAI
+    const recipe = await generateRecipeWithOpenAI(videoUrl, videoData);
+    
+    console.log('OpenAI recipe generated successfully:', recipe.title);
+    return recipe;
+
+  } catch (error: any) {
+    console.error('Error in generateRecipeFromVideoUrl:', error);
+    throw new Error(`Recipe generation failed: ${error.message}`);
+  }
+}
+
 
 /**
  * ✅ EXISTING FUNCTION - KEEP THIS AS IS
@@ -54,17 +236,17 @@ export const generateRecipe = functions.https.onRequest(async (req, res) => {
         return;
       }
 
-      console.log('Processing video URL:', videoUrl);
+      console.log('Processing video URL (HTTP):', videoUrl);
 
-      // Use Gemini to analyze the video
+      // ✅ NOW USES OPENAI instead of Gemini
       const recipe = await generateRecipeFromVideoUrl(videoUrl);
 
-      console.log('Recipe generated successfully:', recipe.title);
+      console.log('Recipe generated successfully (HTTP):', recipe.title);
       res.status(200).json(recipe);
 
     } catch (error) {
-      console.error('Error in generateRecipe:', error);
-      res.status(500).json({ 
+      console.error('Error in generateRecipe (HTTP):', error);
+      res.status(500).json({
         error: 'Failed to generate recipe: ' + (error instanceof Error ? error.message : 'Unknown error')
       });
     }
@@ -72,7 +254,7 @@ export const generateRecipe = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * ✅ FIXED: Callable version (v6 compatible)
+ * ✅ EXISTING FUNCTION - KEEP THIS AS IS (but now uses OpenAI internally)
  */
 export const generateRecipeFromVideo = functions.https.onCall(async (request) => {
   // Check authentication
@@ -87,79 +269,22 @@ export const generateRecipeFromVideo = functions.https.onCall(async (request) =>
   }
 
   try {
-    console.log('Processing video URL for user:', request.auth.uid);
-    
-    // Use the SAME recipe generation logic
+    console.log('Processing video URL for user (Callable):', request.auth.uid);
+
+    // ✅ NOW USES OPENAI instead of Gemini
     const recipe = await generateRecipeFromVideoUrl(videoUrl);
-    
-    console.log('Recipe generated successfully:', recipe.title);
+
+    console.log('Recipe generated successfully (Callable):', recipe.title);
     return recipe;
 
   } catch (error: any) {
-    console.error('Error in generateRecipeFromVideo:', error);
+    console.error('Error in generateRecipeFromVideo (Callable):', error);
     throw new functions.https.HttpsError('internal', 'Failed to generate recipe: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 });
 
 /**
- * ✅ ENHANCED BUT COMPATIBLE: Improved recipe generation
- * This replaces your existing function but maintains compatibility
- */
-async function generateRecipeFromVideoUrl(videoUrl: string): Promise<AIRecipeResponse> {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    const prompt = `
-You are an expert chef and recipe writer. 
-Analyze this cooking video and convert it into a structured JSON recipe.
-
-Video: ${videoUrl}
-
-Extract from the video:
-1. A catchy "title" for the recipe
-2. A complete list of "ingredients" with quantities and measurements
-3. Numbered, clear "instructions" in the correct order
-4. Optional: "prepTime", "cookTime", "servings", "difficulty", "tags"
-
-IMPORTANT: Return ONLY valid JSON in this exact format. No additional text, no markdown, no code blocks.
-{
-  "title": "Recipe Name",
-  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt"],
-  "instructions": ["Step 1 description", "Step 2 description", "Step 3 description"],
-  "prepTime": "15 mins",
-  "cookTime": "30 mins",
-  "servings": "4",
-  "difficulty": "Easy",
-  "tags": ["quick", "healthy", "dinner"]
-}
-`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    console.log('Gemini raw response:', text);
-
-    // Clean the response
-    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-
-    // Parse the JSON response
-    const recipe = JSON.parse(cleanText) as AIRecipeResponse;
-
-    // Validate the required fields (title, ingredients, instructions)
-    if (!recipe.title || !Array.isArray(recipe.ingredients) || !Array.isArray(recipe.instructions)) {
-      throw new Error('Invalid recipe structure from AI');
-    }
-
-    return recipe;
-  } catch (error: any) {
-    console.error('Error generating recipe with Gemini:', error);
-    throw new Error(`AI recipe generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-/**
- * ✅ FIXED: Save recipe to Firestore (v6 compatible)
+ * ✅ EXISTING FUNCTION - KEEP THIS AS IS
  */
 export const saveGeneratedRecipe = functions.https.onCall(async (request) => {
   if (!request.auth) {
@@ -185,7 +310,7 @@ export const saveGeneratedRecipe = functions.https.onCall(async (request) => {
     };
 
     const docRef = await recipesRef.add(recipeData);
-    
+
     return { id: docRef.id, ...recipeData };
 
   } catch (error: any) {
@@ -195,7 +320,7 @@ export const saveGeneratedRecipe = functions.https.onCall(async (request) => {
 });
 
 /**
- * ✅ FIXED: Get user's recipes (v6 compatible)
+ * ✅ EXISTING FUNCTION - KEEP THIS AS IS
  */
 export const getUserRecipes = functions.https.onCall(async (request) => {
   if (!request.auth) {
@@ -205,7 +330,7 @@ export const getUserRecipes = functions.https.onCall(async (request) => {
   try {
     const db = admin.firestore();
     const recipesRef = db.collection('recipes');
-    
+
     const snapshot = await recipesRef
       .where('ownerId', '==', request.auth.uid)
       .orderBy('createdAt', 'desc')
