@@ -179,3 +179,4 @@ export const searchRecipes = async (searchTerm: string, userId?: string): Promis
     throw new Error('Failed to search recipes');
   }
 };
+

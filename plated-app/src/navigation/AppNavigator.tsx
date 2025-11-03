@@ -5,10 +5,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthScreen } from '../screens/AuthScreen';
 import { TabNavigator } from './TabNavigator';
 import { User } from 'firebase/auth';
+import { Recipe } from '../types/recipe';
+import { RecipeDetailScreen } from '../screens/RecipeDetailScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  RecipeDetail: { recipe: Recipe }; // ✅ Add this
+
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -23,7 +27,22 @@ export const AppNavigator = ({ user }: AppNavigatorProps) => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           // User is signed in - show Tab Navigator
-          <Stack.Screen name="Main" component={TabNavigator} />
+          <>
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen 
+              name="RecipeDetail" 
+              component={RecipeDetailScreen}
+              options={{ 
+                headerShown: true, 
+                title: 'Recipe Details',
+                headerStyle: {
+                  backgroundColor: '#ff6b6b',
+                },
+                headerTintColor: 'white',
+              }}
+            />
+          </>
+
         ) : (
           // User is signed out - show AuthScreen
           <Stack.Screen name="Auth" component={AuthScreen} />

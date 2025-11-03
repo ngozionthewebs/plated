@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { RecipeForm } from '../components/RecipeForm';
+import { getAuth } from 'firebase/auth';
 import { GeneratedRecipe } from '../components/GeneratedRecipe';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import { generateRecipeFromVideo } from '../services/recipeService';
@@ -55,18 +56,35 @@ export const CreateRecipeScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  const handleSaveRecipe = async (recipe: Recipe) => {
-    try {
-      console.log('💾 Saving recipe to database:', recipe.title);
-      await createRecipe(recipe);
-      Alert.alert('Success', 'Recipe saved to your cookbook!');
-      setGeneratedRecipe(null);
-    } catch (error) {
-      console.error('❌ Save recipe error:', error);
-      Alert.alert('Save Failed', 'Failed to save recipe. Please try again.');
+const handleSaveRecipe = async (recipe: Recipe) => {
+  try {
+    console.log('💾 Saving recipe to database:', recipe.title);
+    
+    const auth = getAuth();
+    const currentUser = auth.currentUser; // ✅ Rename to avoid conflict
+    
+    if (!currentUser) {
+      throw new Error('User must be logged in to save recipes');
     }
-  };
+    
+    // Ensure recipe has ownerId from current user
+    const recipeToSave = {
+      ...recipe,
+      ownerId: currentUser.uid, // ✅ Use the local user variable
+      isPublic: false, // Default to private
+      createdAt: new Date(),
+    };
+    
+    console.log('📋 Recipe data being saved:', recipeToSave);
+    
+    await createRecipe(recipeToSave);
+    Alert.alert('Success', 'Recipe saved to your cookbook!');
+    setGeneratedRecipe(null);
+  } catch (error) {
+    console.error('❌ Save recipe error:', error);
+    Alert.alert('Save Failed', 'Failed to save recipe. Please try again.');
+  }
+};
 
   // ✅ ADDED: Debugging for when generatedRecipe changes
   React.useEffect(() => {
