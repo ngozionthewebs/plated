@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './config/firebase';
 import { AppNavigator } from './src/navigation/AppNavigator';
@@ -23,11 +23,45 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.loadingContainer}>
+        <Image 
+          source={require('./assets/6.png')}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        />
         <ActivityIndicator size="large" color="#ff6b6b" />
       </View>
     );
   }
 
-  return <AppNavigator user={user} />;
+  return (
+    <View style={styles.appContainer}>
+      <Image 
+        source={require('./assets/6.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <AppNavigator user={user} />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  appContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    resizeMode: 'cover',
+    width: '113%',
+    height: '10%',
+    alignSelf: 'center',
+  },
+});

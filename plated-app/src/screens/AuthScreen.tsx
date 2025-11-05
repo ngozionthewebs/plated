@@ -1,6 +1,6 @@
 // src/screens/AuthScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ScrollView } from 'react-native';
 import { auth } from '../../config/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -157,10 +157,34 @@ export const AuthScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Plated</Text>
-      <Text style={styles.subtitle}>Your AI Recipe Assistant</Text>
+      {/* Background Image */}
+      <Image 
+        source={require('../../assets/6.png')} // Adjust path if needed
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
       
-      {isSignUp ? renderSignUpForm() : renderSignInForm()}
+      {/* Content Container with semi-transparent overlay for better readability */}
+      <View>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo and Title Container */}
+          <View style={styles.logoTitleContainer}>
+            <Image 
+              source={require('../../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>PLATED</Text>
+          </View>
+          
+          <Text style={styles.subtitle}>Your AI Recipe Assistant</Text>
+          
+          {isSignUp ? renderSignUpForm() : renderSignInForm()}
+        </ScrollView>
+      </View>
     </View>
   );
 };
@@ -172,12 +196,33 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    resizeMode: 'cover',
+    width: '113%',
+    height: '105%',
+    alignSelf: 'center',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  // New styles for logo and title container
+  logoTitleContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginBottom: 8, // Space between logo and title
+  },
   title: {
     fontSize: 36,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
-    color: '#ff6b6b',
+    color: '#99B7F7',
   },
   subtitle: {
     fontSize: 18,
@@ -195,13 +240,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#f0f0f0ff',
   },
   halfInput: {
     flex: 0.48,
   },
   button: {
-    backgroundColor: '#ff6b6b',
+    backgroundColor: '#267F53',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -221,7 +266,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   switchAuthLink: {
-    color: '#ff6b6b',
+    color: '#99B7F7',
     fontWeight: 'bold',
   },
 });

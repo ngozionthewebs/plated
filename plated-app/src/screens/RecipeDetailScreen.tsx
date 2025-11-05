@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bullet: {
-    color: '#3B82F6',
+    color: '#99B7F7',
     marginRight: 8,
     fontSize: 16,
     lineHeight: 20,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   stepNumber: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#99B7F7',
     width: 28,
     height: 28,
     borderRadius: 14,

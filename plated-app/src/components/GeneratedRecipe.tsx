@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Recipe } from '../types/recipe';
+import { Save, RotateCcw } from 'lucide-react-native'; // Import Lucide icons
 
 interface GeneratedRecipeProps {
   recipe: Recipe;
@@ -69,126 +70,161 @@ export const GeneratedRecipe: React.FC<GeneratedRecipeProps> = ({ recipe, onSave
   const safeTags = recipe.tags || [];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>✨ AI-Generated Recipe</Text>
+    <View style={styles.glowingContainer}>
+      {/* Glow Effects */}
+      <View style={styles.glowEffect} />
+      <View style={styles.glowEffect2} />
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Recipe Title with fallback */}
-        <Text style={styles.title}>{recipe.title || 'Untitled Recipe'}</Text>
+      {/* Main Content */}
+      <View style={styles.container}>
+        <Text style={styles.header}>✨ AI-Generated Recipe</Text>
         
-        {/* Recipe Metadata */}
-        <View style={styles.metadataContainer}>
-          {recipe.prepTime && (
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Prep</Text>
-              <Text style={styles.metadataValue}>{formatTime(recipe.prepTime)}</Text>
-            </View>
-          )}
-          {recipe.cookTime && (
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Cook</Text>
-              <Text style={styles.metadataValue}>{formatTime(recipe.cookTime)}</Text>
-            </View>
-          )}
-          {recipe.servings && (
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Servings</Text>
-              <Text style={styles.metadataValue}>{recipe.servings}</Text>
-            </View>
-          )}
-          {recipe.difficulty && (
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Difficulty</Text>
-              <Text style={styles.metadataValue}>{recipe.difficulty}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Ingredients Section with safe rendering */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Ingredients {safeIngredients.length > 0 && `(${safeIngredients.length})`}
-          </Text>
-          {safeIngredients.length > 0 ? (
-            safeIngredients.map((ingredient, index) => (
-              <View key={index} style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>{ingredient}</Text>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Recipe Title with fallback */}
+          <Text style={styles.title}>{recipe.title || 'Untitled Recipe'}</Text>
+          
+          {/* Recipe Metadata */}
+          <View style={styles.metadataContainer}>
+            {recipe.prepTime && (
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Prep</Text>
+                <Text style={styles.metadataValue}>{formatTime(recipe.prepTime)}</Text>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No ingredients generated</Text>
-          )}
-        </View>
-
-        {/* Instructions Section with safe rendering */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Instructions {safeInstructions.length > 0 && `(${safeInstructions.length})`}
-          </Text>
-          {safeInstructions.length > 0 ? (
-            safeInstructions.map((instruction, index) => (
-              <View key={index} style={styles.instructionItem}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepText}>{index + 1}</Text>
-                </View>
-                <Text style={styles.instructionText}>{instruction}</Text>
+            )}
+            {recipe.cookTime && (
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Cook</Text>
+                <Text style={styles.metadataValue}>{formatTime(recipe.cookTime)}</Text>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No instructions generated</Text>
-          )}
-        </View>
-
-        {/* Tags with safe rendering */}
-        {safeTags.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tags</Text>
-            <View style={styles.tagsContainer}>
-              {safeTags.map((tag, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
+            )}
+            {recipe.servings && (
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Servings</Text>
+                <Text style={styles.metadataValue}>{recipe.servings}</Text>
+              </View>
+            )}
+            {recipe.difficulty && (
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Difficulty</Text>
+                <Text style={styles.metadataValue}>{recipe.difficulty}</Text>
+              </View>
+            )}
           </View>
-        )}
-      </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={[styles.button, styles.saveButton]} 
-          onPress={handleSave}
-        >
-          <Text style={styles.saveButtonText}>💾 Save to Cookbook</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, styles.resetButton]} 
-          onPress={handleReset}
-        >
-          <Text style={styles.resetButtonText}>🔄 Try Another</Text>
-        </TouchableOpacity>
+          {/* Ingredients Section with safe rendering */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Ingredients {safeIngredients.length > 0 && `(${safeIngredients.length})`}
+            </Text>
+            {safeIngredients.length > 0 ? (
+              safeIngredients.map((ingredient, index) => (
+                <View key={index} style={styles.listItem}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.listText}>{ingredient}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No ingredients generated</Text>
+            )}
+          </View>
+
+          {/* Instructions Section with safe rendering */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Instructions {safeInstructions.length > 0 && `(${safeInstructions.length})`}
+            </Text>
+            {safeInstructions.length > 0 ? (
+              safeInstructions.map((instruction, index) => (
+                <View key={index} style={styles.instructionItem}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepText}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.instructionText}>{instruction}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No instructions generated</Text>
+            )}
+          </View>
+
+          {/* Tags with safe rendering */}
+          {safeTags.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Tags</Text>
+              <View style={styles.tagsContainer}>
+                {safeTags.map((tag, index) => (
+                  <View key={index} style={styles.tag}>
+                    <Text style={styles.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity 
+            style={[styles.button, styles.saveButton]} 
+            onPress={handleSave}
+          >
+            <Save size={20} color="#ffffff" />
+            <Text style={styles.saveButtonText}>Save to Cookbook</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.resetButton]} 
+            onPress={handleReset}
+          >
+            <RotateCcw size={20} color="#6B7280" />
+            <Text style={styles.resetButtonText}>Try Another</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  glowingContainer: {
+    position: 'relative',
+    marginVertical: 8,
+  },
+  glowEffect: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    backgroundColor: '#99B7F7',
+    borderRadius: 16,
+    opacity: 0.4,
+    zIndex: 0,
+  },
+  glowEffect2: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 14,
+    zIndex: 1,
+  },
   container: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    marginTop: 16,
     padding: 16,
+    zIndex: 2,
+    position: 'relative',
     // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     // Android elevation
-    elevation: 4,
-     flex: 1,
+    elevation: 6,
   },
   header: {
     fontSize: 16,
@@ -244,7 +280,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bullet: {
-    color: '#3B82F6',
+    color: '#6D9CFF', // Changed to purple
     marginRight: 8,
     fontSize: 16,
     lineHeight: 20,
@@ -261,7 +297,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   stepNumber: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#6D9CFF', // Changed to purple
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -305,13 +341,16 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
   },
   saveButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#267F53', // Green color
   },
   resetButton: {
     backgroundColor: 'transparent',

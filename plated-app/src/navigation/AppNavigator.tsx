@@ -36,7 +36,7 @@ export const AppNavigator = ({ user }: AppNavigatorProps) => {
                 headerShown: true, 
                 title: 'Recipe Details',
                 headerStyle: {
-                  backgroundColor: '#ff6b6b',
+                  backgroundColor: '#267F53',
                 },
                 headerTintColor: 'white',
               }}

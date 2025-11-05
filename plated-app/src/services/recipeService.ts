@@ -48,6 +48,7 @@ export const generateRecipeFromVideo = async (videoUrl: string): Promise<Recipe>
       servings: recipeData.servings,
       difficulty: recipeData.difficulty,
       tags: recipeData.tags || [], // Default to empty array
+      
     };
 
     console.log('🎉 Final recipe object:', recipe);

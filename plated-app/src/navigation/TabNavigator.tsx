@@ -42,10 +42,10 @@ export const TabNavigator = () => {
 
           return <TabBarIcon name={iconName} color={color} size={size} />;
         },
-        tabBarActiveTintColor: '#ff6b6b',
+        tabBarActiveTintColor: '#7FA7FC',
         tabBarInactiveTintColor: 'gray',
         headerStyle: {
-          backgroundColor: '#ff6b6b',
+          backgroundColor: '#267F53',
         },
         headerTintColor: 'white',
         headerTitleStyle: {

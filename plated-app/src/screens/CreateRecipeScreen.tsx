@@ -99,7 +99,7 @@ const handleSaveRecipe = async (recipe: Recipe) => {
   }, [generatedRecipe]);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <ScrollView style={{ flex: 1, }}>
       <View style={{ padding: 16 }}>
         <RecipeForm 
           onGenerateRecipe={handleGenerateRecipe}
