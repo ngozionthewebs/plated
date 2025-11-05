@@ -116,6 +116,24 @@ This creates a robust, scalable architecture where authentication state drives n
 
 ## Unit Testing & User Testing
 
+<img width="1791" height="1080" alt="tests" src="https://github.com/user-attachments/assets/fbe9590d-4ac6-476e-b3d4-269acf232ff2" />
+
+Based on moderated usability testing where users completed specific tasks:
+
+## 1. Core Functionality is User-Friendly
+- The primary feature of generating a recipe from a link was found to be easy to use by half (50%) of the testers.
+- A further 33.3% were neutral, indicating the process has a slight learning curve but is not a major barrier.
+
+## 2. Recipe Accuracy Receives Mixed Reviews
+- User opinion on the quality of the AI-generated recipes was split directly down the middle.
+- An equal share of users found the recipes to be "Very accurate and extremely helpful" as those who found them "Very inaccurate and unusable," presenting a clear area for improvement.
+
+## 3. Cookbook Feature is a Success
+- A significant majority of users (66.7%) found it easy to save and access recipes in their cookbook.
+- This feature was positively received, with users expressing enjoyment in using it.
+
+## 4. Strong Interest in Community Features
+- Half (50%) of the users indicated they would be likely to use the community feature to discover new recipes, showing a solid potential for this function.
 ---
 
 ## Highlights & Challenges
