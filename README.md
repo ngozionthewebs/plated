@@ -71,7 +71,7 @@ Before you begin, ensure you have the following installed:
 ***
 
 ## Demonstration
-A walkthrough of the app's core features can be viewed here: 
+A walkthrough of the app's core features can be viewed here: [https://youtu.be/eCcVzpbHCuc](https://youtu.be/eCcVzpbHCuc)
 ***
 
 
