@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     resizeMode: 'cover',
     width: '113%',
-    height: '10%',
+    height: '105%',
     alignSelf: 'center',
   },
 });
